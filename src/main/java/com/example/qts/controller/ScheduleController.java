@@ -1,8 +1,5 @@
 package com.example.qts.controller;
 
-import com.example.qts.discipine.Discipline;
-import com.example.qts.discipine.DisciplineRequestDTO;
-import com.example.qts.discipine.DisciplineResponseDTO;
 import com.example.qts.schedule.Schedule;
 import com.example.qts.schedule.ScheduleRepository;
 import com.example.qts.schedule.ScheduleRequestDTO;
@@ -48,6 +45,8 @@ public class ScheduleController {
         repository.save(schedule);
     }
 
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @DeleteMapping("/{id}")
     public void deleteSchedule(@PathVariable long id){
         repository.deleteById(id);
     }

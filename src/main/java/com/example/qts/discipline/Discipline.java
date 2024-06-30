@@ -1,4 +1,4 @@
-package com.example.qts.discipine;
+package com.example.qts.discipline;
 
 import jakarta.persistence.*;
 import lombok.*;

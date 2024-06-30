@@ -1,8 +1,12 @@
 package com.example.qts.schedule;
 
 
+import com.example.qts.days_of_week.DaysOfWeek;
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Setter
 @Getter
@@ -17,6 +21,14 @@ public class Schedule {
     private String descricao;
     private String horario_inicio;
     private String horario_fim;
+
+    @ManyToMany
+    @JoinTable(
+            name = "days_of_week_schedules",
+            joinColumns = @JoinColumn(name = "schedule_id"),
+            inverseJoinColumns = @JoinColumn(name = "day_of_week_id")
+    )
+    private List<DaysOfWeek> daysOfWeek = new ArrayList<>();
 
     public Schedule(ScheduleRequestDTO data){
         this.descricao = data.descricao();

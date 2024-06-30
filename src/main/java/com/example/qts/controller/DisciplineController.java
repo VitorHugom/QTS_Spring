@@ -1,9 +1,9 @@
 package com.example.qts.controller;
 
-import com.example.qts.discipine.Discipline;
-import com.example.qts.discipine.DisciplineRepository;
-import com.example.qts.discipine.DisciplineRequestDTO;
-import com.example.qts.discipine.DisciplineResponseDTO;
+import com.example.qts.discipline.Discipline;
+import com.example.qts.discipline.DisciplineRepository;
+import com.example.qts.discipline.DisciplineRequestDTO;
+import com.example.qts.discipline.DisciplineResponseDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

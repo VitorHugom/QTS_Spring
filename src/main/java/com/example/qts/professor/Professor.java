@@ -2,6 +2,7 @@ package com.example.qts.professor;
 
 import com.example.qts.days_of_week.DaysOfWeek;
 import com.example.qts.discipline.Discipline;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -20,6 +21,7 @@ public class Professor {
 
     private String nome_professor;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
             name = "professors_disciplines",
@@ -28,6 +30,7 @@ public class Professor {
     )
     private List<Discipline> disciplines;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
             name = "professors_days_of_week",

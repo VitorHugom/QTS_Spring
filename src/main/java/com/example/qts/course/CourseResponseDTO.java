@@ -9,7 +9,7 @@ public record CourseResponseDTO(Long id, String nome_curso, Integer carga_horari
     public CourseResponseDTO(Course course) {
         this(
                 course.getId(),
-                course.getNome_curso(),
+                course.getNomeCurso(),
                 course.getCarga_horaria(),
                 course.getDisciplines().stream().map(DisciplineResponseDTO::new).collect(Collectors.toList())
         );

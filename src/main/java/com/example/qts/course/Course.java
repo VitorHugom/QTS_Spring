@@ -17,7 +17,7 @@ public class Course {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String nome_curso;
+    private String nomeCurso;
     private Integer carga_horaria;
 
     @ManyToMany
@@ -29,7 +29,7 @@ public class Course {
     private List<Discipline> disciplines;
 
     public Course(CourseRequestDTO data) {
-        this.nome_curso = data.nome_curso();
+        this.nomeCurso = data.nome_curso();
         this.carga_horaria = data.carga_horaria();
     }
 }

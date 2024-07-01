@@ -2,6 +2,7 @@ package com.example.qts.schedule;
 
 
 import com.example.qts.days_of_week.DaysOfWeek;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -22,6 +23,7 @@ public class Schedule {
     private String horario_inicio;
     private String horario_fim;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
             name = "days_of_week_schedules",

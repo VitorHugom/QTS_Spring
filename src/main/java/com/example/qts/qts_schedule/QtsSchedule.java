@@ -1,5 +1,6 @@
 package com.example.qts.qts_schedule;
 
+import com.example.qts.days_of_week.DaysOfWeek;
 import com.example.qts.discipline.Discipline;
 import com.example.qts.professor.Professor;
 import com.example.qts.qts.Qts;
@@ -35,6 +36,15 @@ public class QtsSchedule {
     @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
-    @Column(name = "dia_semana", nullable = false)
-    private String diaSemana;
+    @ManyToOne
+    @JoinColumn(name = "day_of_week_id", nullable = false)
+    private DaysOfWeek daysOfWeek;
+
+    public QtsSchedule(Qts qts, Discipline discipline, Professor professor, Schedule schedule, DaysOfWeek daysOfWeek) {
+        this.qts = qts;
+        this.discipline = discipline;
+        this.professor = professor;
+        this.schedule = schedule;
+        this.daysOfWeek = daysOfWeek;
+    }
 }

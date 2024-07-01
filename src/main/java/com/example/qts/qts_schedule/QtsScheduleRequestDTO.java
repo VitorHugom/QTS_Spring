@@ -6,5 +6,5 @@ import com.example.qts.professor.Professor;
 import com.example.qts.qts.Qts;
 import com.example.qts.schedule.Schedule;
 
-public record QtsScheduleRequestDTO(Qts qts, Discipline discipline, Professor professor, Schedule schedule) {
+public record QtsScheduleRequestDTO(Qts qts, Discipline discipline, Professor professor, Schedule schedule, DaysOfWeek daysOfWeek) {
 }

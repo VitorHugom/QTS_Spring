@@ -5,13 +5,14 @@ import com.example.qts.discipline.Discipline;
 import com.example.qts.professor.Professor;
 import com.example.qts.schedule.Schedule;
 
-public record QtsScheduleResponseDTO(Long id, Discipline discipline, Professor professor, Schedule schedule) {
+public record QtsScheduleResponseDTO(Long id, Discipline discipline, Professor professor, Schedule schedule, DaysOfWeek daysOfWeek) {
     public  QtsScheduleResponseDTO(QtsSchedule qtsSchedule){
         this(
                 qtsSchedule.getId(),
                 qtsSchedule.getDiscipline(),
                 qtsSchedule.getProfessor(),
-                qtsSchedule.getSchedule()
+                qtsSchedule.getSchedule(),
+                qtsSchedule.getDaysOfWeek()
         );
     }
 }

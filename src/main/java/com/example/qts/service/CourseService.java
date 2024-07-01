@@ -41,7 +41,7 @@ public class CourseService {
     public CourseResponseDTO updateCourse(Long id, CourseRequestDTO request) {
         Course course = courseRepository.findById(id).orElseThrow(() -> new RuntimeException("Curso não encontrado"));
         List<Discipline> disciplines = disciplineRepository.findAllById(request.disciplineIds());
-        course.setNome_curso(request.nome_curso());
+        course.setNomeCurso(request.nome_curso());
         course.setCarga_horaria(request.carga_horaria());
         course.setDisciplines(disciplines);
         courseRepository.save(course);

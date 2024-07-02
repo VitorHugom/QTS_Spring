@@ -43,4 +43,11 @@ public class QtsController {
         QtsResponseDTO qts = qtsService.getQtsById(id);
         return ResponseEntity.ok(qts);
     }
+
+    @CrossOrigin(origins = "*", allowedHeaders = "*")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteQts(@PathVariable Long id) {
+        qtsService.deleteQts(id);
+        return ResponseEntity.noContent().build();
+    }
 }

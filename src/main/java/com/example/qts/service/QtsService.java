@@ -43,30 +43,31 @@ public class QtsService {
     @Autowired
     private DaysOfWeekRepository daysOfWeekRepository;
 
+    @Transactional
+    public void deleteQts(Long id) {
+        qtsScheduleRepository.deleteByQtsId(id);
+        qtsRepository.deleteById(id);
+    }
+
     public List<QtsBasicResponseDTO> getAllQtsBasic(){
         List<Qts> qtsList = qtsRepository.findAll();
         return  qtsList.stream().map(QtsBasicResponseDTO::new).collect(Collectors.toList());
     }
+
     public QtsResponseDTO getQtsById(Long id) {
-        // Buscar QTS pelo ID
         Optional<Qts> qtsOptional = qtsRepository.findById(id);
         if (!qtsOptional.isPresent()) {
             throw new RuntimeException("QTS não encontrado para o ID: " + id);
         }
 
         Qts qts = qtsOptional.get();
-
-        // Buscar detalhes do QTS
         List<QtsSchedule> qtsScheduleList = qtsScheduleRepository.findByQts(qts);
-
-        // Mapear para QtsResponseDTO
         List<QtsScheduleResponseDTO> qtsScheduleResponseDTOList = qtsScheduleList.stream()
                 .map(QtsScheduleResponseDTO::new)
                 .collect(Collectors.toList());
 
         return new QtsResponseDTO(qts, qtsScheduleResponseDTOList);
     }
-
 
     public List<QtsResponseDTO> getAllQts() {
         List<Qts> qtsList = qtsRepository.findAll();
@@ -95,14 +96,24 @@ public class QtsService {
 
         List<Professor> professors = professorRepository.findAll();
 
+        // Obter todas as alocações de QtsSchedules
+        List<QtsSchedule> allQtsSchedules = qtsScheduleRepository.findAll();
+
+        // Map para armazenar os horários ocupados por professor
+        Map<Long, Set<String>> professorHorarioOcupado = new HashMap<>();
+        for (QtsSchedule qtsSchedule : allQtsSchedules) {
+            Long professorId = qtsSchedule.getProfessor().getId();
+            String horarioKey = qtsSchedule.getDaysOfWeek().getId() + "-" + qtsSchedule.getSchedule().getId();
+            professorHorarioOcupado
+                    .computeIfAbsent(professorId, k -> new HashSet<>())
+                    .add(horarioKey);
+        }
+
         Map<Long, Map<Long, List<Long>>> professorDisponibilidade = new HashMap<>();
         for (Professor professor : professors) {
             Map<Long, List<Long>> disponibilidade = new HashMap<>();
             for (DaysOfWeek day : professor.getDaysOfWeek()) {
-                disponibilidade.put(day.getId(), new ArrayList<>());
-                for (Schedule schedule : day.getSchedules()) {
-                    disponibilidade.get(day.getId()).add(schedule.getId());
-                }
+                disponibilidade.put(day.getId(), new ArrayList<>(day.getSchedules().stream().map(Schedule::getId).toList()));
             }
             professorDisponibilidade.put(professor.getId(), disponibilidade);
         }
@@ -122,12 +133,11 @@ public class QtsService {
 
         professors.sort(Comparator.comparingInt(p -> professorDisponibilidade.get(p.getId()).size()));
 
-        for (Professor professor : professors) {
-            var disponibilidade = professorDisponibilidade.get(professor.getId());
-            for (Discipline disciplina : disciplines) {
-                if (disciplinasAlocadas.contains(disciplina.getId())) {
-                    continue;
-                }
+        for (Discipline disciplina : disciplines) {
+            if (disciplinasAlocadas.contains(disciplina.getId())) {
+                continue;
+            }
+            for (Professor professor : professors) {
                 if (!disciplinaProfessores.getOrDefault(disciplina.getId(), Collections.emptyList()).contains(professor.getId())) {
                     continue;
                 }
@@ -135,24 +145,39 @@ public class QtsService {
                 int horasRestantes = Math.round(disciplina.getWorkload());
                 boolean alocada = false;
 
+                var disponibilidade = professorDisponibilidade.get(professor.getId());
                 if (horasRestantes >= 80) {
                     for (var entry : disponibilidade.entrySet()) {
                         if (entry.getValue().size() >= 4) {
                             DaysOfWeek dayOfWeek = daysOfWeekRepository.findById(entry.getKey())
                                     .orElseThrow(() -> new RuntimeException("Dia da semana não encontrado: " + entry.getKey()));
+                            boolean podeAlocar = true;
                             for (Long horario : entry.getValue().subList(0, 4)) {
-                                qtsSchedules.add(new QtsSchedule(null, disciplina, professor, scheduleRepository.findById(horario).orElse(null), dayOfWeek));
-                                horarioOcupado.add(entry.getKey() + "-" + horario);
+                                String horarioKey = entry.getKey() + "-" + horario;
+                                if (horarioOcupado.contains(horarioKey) || professorHorarioOcupado.getOrDefault(professor.getId(), new HashSet<>()).contains(horarioKey)) {
+                                    podeAlocar = false;
+                                    break;
+                                }
                             }
-                            disciplinasAlocadas.add(disciplina.getId());
-                            alocada = true;
-                            break;
+                            if (podeAlocar) {
+                                List<Long> horariosParaRemover = new ArrayList<>();
+                                for (Long horario : entry.getValue().subList(0, 4)) {
+                                    String horarioKey = entry.getKey() + "-" + horario;
+                                    qtsSchedules.add(new QtsSchedule(null, disciplina, professor, scheduleRepository.findById(horario).orElse(null), dayOfWeek));
+                                    horarioOcupado.add(horarioKey);
+                                    horariosParaRemover.add(horario);
+                                }
+                                entry.getValue().removeAll(horariosParaRemover);
+                                disciplinasAlocadas.add(disciplina.getId());
+                                alocada = true;
+                                break;
+                            }
                         }
                     }
                 }
 
                 if (alocada) {
-                    continue;
+                    break;
                 }
 
                 for (var entry : disponibilidade.entrySet()) {
@@ -161,19 +186,28 @@ public class QtsService {
                     }
                     DaysOfWeek dayOfWeek = daysOfWeekRepository.findById(entry.getKey())
                             .orElseThrow(() -> new RuntimeException("Dia da semana não encontrado: " + entry.getKey()));
-                    for (Long horario : entry.getValue()) {
+                    List<Long> horariosParaRemover = new ArrayList<>();
+                    for (Long horario : new ArrayList<>(entry.getValue())) {
                         if (horasRestantes <= 0) {
                             break;
                         }
-                        if (!horarioOcupado.contains(entry.getKey() + "-" + horario)) {
+                        String horarioKey = entry.getKey() + "-" + horario;
+                        if (!horarioOcupado.contains(horarioKey) &&
+                                !professorHorarioOcupado.getOrDefault(professor.getId(), new HashSet<>()).contains(horarioKey)) {
                             qtsSchedules.add(new QtsSchedule(null, disciplina, professor, scheduleRepository.findById(horario).orElse(null), dayOfWeek));
-                            horarioOcupado.add(entry.getKey() + "-" + horario);
+                            horarioOcupado.add(horarioKey);
+                            horariosParaRemover.add(horario);
+                            professorHorarioOcupado
+                                    .computeIfAbsent(professor.getId(), k -> new HashSet<>())
+                                    .add(horarioKey);
                             horasRestantes -= 20;
                         }
                     }
+                    entry.getValue().removeAll(horariosParaRemover);
                 }
                 if (horasRestantes <= 0) {
                     disciplinasAlocadas.add(disciplina.getId());
+                    break;
                 }
             }
         }
@@ -186,4 +220,5 @@ public class QtsService {
             qtsScheduleRepository.save(qtsSchedule);
         }
     }
+
 }

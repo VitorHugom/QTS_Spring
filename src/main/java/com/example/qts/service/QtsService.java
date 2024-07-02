@@ -7,6 +7,7 @@ import com.example.qts.discipline.Discipline;
 import com.example.qts.professor.Professor;
 import com.example.qts.professor.ProfessorRepository;
 import com.example.qts.qts.Qts;
+import com.example.qts.qts.QtsBasicResponseDTO;
 import com.example.qts.qts.QtsRepository;
 import com.example.qts.qts.QtsResponseDTO;
 import com.example.qts.qts_schedule.QtsSchedule;
@@ -41,6 +42,31 @@ public class QtsService {
 
     @Autowired
     private DaysOfWeekRepository daysOfWeekRepository;
+
+    public List<QtsBasicResponseDTO> getAllQtsBasic(){
+        List<Qts> qtsList = qtsRepository.findAll();
+        return  qtsList.stream().map(QtsBasicResponseDTO::new).collect(Collectors.toList());
+    }
+    public QtsResponseDTO getQtsById(Long id) {
+        // Buscar QTS pelo ID
+        Optional<Qts> qtsOptional = qtsRepository.findById(id);
+        if (!qtsOptional.isPresent()) {
+            throw new RuntimeException("QTS não encontrado para o ID: " + id);
+        }
+
+        Qts qts = qtsOptional.get();
+
+        // Buscar detalhes do QTS
+        List<QtsSchedule> qtsScheduleList = qtsScheduleRepository.findByQts(qts);
+
+        // Mapear para QtsResponseDTO
+        List<QtsScheduleResponseDTO> qtsScheduleResponseDTOList = qtsScheduleList.stream()
+                .map(QtsScheduleResponseDTO::new)
+                .collect(Collectors.toList());
+
+        return new QtsResponseDTO(qts, qtsScheduleResponseDTOList);
+    }
+
 
     public List<QtsResponseDTO> getAllQts() {
         List<Qts> qtsList = qtsRepository.findAll();

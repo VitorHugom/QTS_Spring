@@ -1,5 +1,6 @@
 package com.example.qts.professor;
 
+import com.example.qts.course.Course;
 import com.example.qts.days_of_week.DaysOfWeek;
 import com.example.qts.discipline.Discipline;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -38,6 +39,15 @@ public class Professor {
             inverseJoinColumns = @JoinColumn(name = "day_of_week_id")
     )
     private List<DaysOfWeek> daysOfWeek;
+
+    @JsonIgnore
+    @ManyToMany
+    @JoinTable(
+            name = "professors_courses",
+            joinColumns = @JoinColumn(name = "professor_id"),
+            inverseJoinColumns = @JoinColumn(name = "course_id")
+    )
+    private List<Course> courses;
 
     public Professor(ProfessorRequestDTO data) {
         this.nome_professor = data.nome_professor();

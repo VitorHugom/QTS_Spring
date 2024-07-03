@@ -1,5 +1,7 @@
 package com.example.qts.service;
 
+import com.example.qts.course.Course;
+import com.example.qts.course.CourseRepository;
 import com.example.qts.days_of_week.DaysOfWeek;
 import com.example.qts.days_of_week.DaysOfWeekRepository;
 import com.example.qts.discipline.Discipline;
@@ -26,6 +28,9 @@ public class ProfessorService {
     @Autowired
     private DaysOfWeekRepository daysOfWeekRepository;
 
+    @Autowired
+    private CourseRepository courseRepository;
+
     public List<ProfessorResponseDTO> getAllProfessors() {
         return professorRepository.findAll().stream().map(ProfessorResponseDTO::new).collect(Collectors.toList());
     }
@@ -38,9 +43,11 @@ public class ProfessorService {
     public ProfessorResponseDTO createProfessor(ProfessorRequestDTO request) {
         List<Discipline> disciplines = disciplineRepository.findAllById(request.disciplineIds());
         List<DaysOfWeek> daysOfWeek = daysOfWeekRepository.findAllById(request.daysOfWeekIds());
+        List<Course> courses = courseRepository.findAllById(request.coursesIds());
         Professor professor = new Professor(request);
         professor.setDisciplines(disciplines);
         professor.setDaysOfWeek(daysOfWeek);
+        professor.setCourses(courses);
         professorRepository.save(professor);
         return new ProfessorResponseDTO(professor);
     }
@@ -49,12 +56,15 @@ public class ProfessorService {
         Professor professor = professorRepository.findById(id).orElseThrow(() -> new RuntimeException("Professor não encontrado"));
         List<Discipline> disciplines = disciplineRepository.findAllById(request.disciplineIds());
         List<DaysOfWeek> daysOfWeek = daysOfWeekRepository.findAllById(request.daysOfWeekIds());
+        List<Course> courses = courseRepository.findAllById(request.coursesIds());
         professor.setNome_professor(request.nome_professor());
         professor.setDisciplines(disciplines);
         professor.setDaysOfWeek(daysOfWeek);
+        professor.setCourses(courses);
         professorRepository.save(professor);
         return new ProfessorResponseDTO(professor);
     }
+
 
     public void deleteProfessor(Long id) {
         professorRepository.deleteById(id);
